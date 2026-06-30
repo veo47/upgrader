@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+import subprocess
+import sys
+from pathlib import Path
+
+
+def run(cmd, check=True):
+    print(f"\n--- {' '.join(cmd)} ---")
+    result = subprocess.run(cmd)
+    if check and result.returncode != 0:
+        print(f"Command failed with exit code {result.returncode}")
+        sys.exit(result.returncode)
+    return result
+
+
+def find_aur_helper():
+    for helper in ["yay", "paru"]:
+        if subprocess.run(["which", helper], capture_output=True).returncode == 0:
+            return helper
+    return None
+
+
+def update_aur():
+    helper = find_aur_helper()
+    if helper:
+        run([helper, "-Syu"])
+    else:
+        print("No AUR helper (yay/paru) found, skipping.")
+
+
+def update_appimages(appimage_dirs):
+    appimages = []
+    for d in appimage_dirs:
+        p = Path(d)
+        if p.is_dir():
+            appimages.extend(p.glob("*.AppImage"))
+    if not appimages:
+        print("\nNo AppImages found.")
+        return
+    print(f"\nFound AppImages: {[a.name for a in appimages]}")
+    for app in appimages:
+        run([str(app), "--update-check"], check=False)
+
+
+def main():
+    if not sys.platform.startswith("linux"):
+        print("This script is designed for Arch Linux.")
+        sys.exit(1)
+
+    run(["sudo", "pacman", "-Syu"])
+    update_aur()
+
+    if subprocess.run(["which", "flatpak"], capture_output=True).returncode == 0:
+        run(["flatpak", "update", "-y"])
+    else:
+        print("\nflatpak not installed, skipping.")
+
+    update_appimages([
+        Path.home() / "Applications",
+        Path.home() / ".local/bin",
+    ])
+
+    print("\nAll upgrades complete.")
+
+
+if __name__ == "__main__":
+    main()
