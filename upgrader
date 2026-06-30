@@ -28,18 +28,23 @@ def update_aur():
         print("No AUR helper (yay/paru) found, skipping.")
 
 
-def update_appimages(appimage_dirs):
-    appimages = []
-    for d in appimage_dirs:
+def update_appimages(dirs):
+    if subprocess.run(["which", "appimageupdatetool"], capture_output=True).returncode != 0:
+        print("\n[!] appimageupdatetool not found. Skipping AppImage updates.")
+        print("To enable this, install it via AUR: yay -S appimageupdatetool-git")
+        return
+    imgs = []
+    for d in dirs:
         p = Path(d)
         if p.is_dir():
-            appimages.extend(p.glob("*.AppImage"))
-    if not appimages:
+            imgs.extend(p.glob("*.AppImage"))
+    if not imgs:
         print("\nNo AppImages found.")
         return
-    print(f"\nFound AppImages: {[a.name for a in appimages]}")
-    for app in appimages:
-        run([str(app), "--update-check"], check=False)
+    print(f"\nFound {len(imgs)} AppImages. Checking for updates...")
+    for a in imgs:
+        print(f"\nChecking update for: {a.name}")
+        run(["appimageupdatetool", "--overwrite", str(a)], check=False)
 
 
 def main():

@@ -19,4 +19,4 @@ upgrader
 1. `sudo pacman -Syu` — official packages
 2. `yay -Syu` or `paru -Syu` — AUR packages
 3. `flatpak update -y` — flatpak apps
-4. `--update-check` on AppImages in `~/Applications` and `~/.local/bin`
+4. `appimageupdatetool --overwrite` on AppImages in `~/Applications` and `~/.local/bin` (install via `yay -S appimageupdatetool-git`)
